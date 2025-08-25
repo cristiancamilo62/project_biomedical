@@ -12,7 +12,7 @@ from nltk.stem import WordNetLemmatizer
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import MultiLabelBinarizer
-from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
+from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score, multilabel_confusion_matrix, classification_report
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.optimizers import Adam
@@ -101,11 +101,12 @@ class MultiLabelTextClassifier:
         # Rellenar valores nulos
         df['title'] = df['title'].fillna('')
         df['abstract'] = df['abstract'].fillna('')
+        df['group'] = df['group'].fillna('')
         
         print(f"Datos cargados: {df.shape}")
         
         # Procesar etiquetas multilabel
-        df['group'] = df['group'].apply(lambda x: str(x).split('|'))
+        df['group'] = df['group'].apply(lambda x: str(x).split('|') if str(x) != '' else [])
         self.mlb = MultiLabelBinarizer()
         y = self.mlb.fit_transform(df['group'])
         self.target_labels = self.mlb.classes_
@@ -138,7 +139,9 @@ class MultiLabelTextClassifier:
         plt.xticks(rotation=45)
         plt.tight_layout()
         plt.savefig(os.path.join(self.model_dir, 'class_distribution.png'))
+        plt.show()
 
+        # Matriz de co-ocurrencia
         co_occurrence_matrix = df[self.target_labels].T.dot(df[self.target_labels])
         plt.figure(figsize=(8, 6))
         ax_complete = sns.heatmap(co_occurrence_matrix, cmap='Blues', cbar=True,
@@ -149,7 +152,8 @@ class MultiLabelTextClassifier:
             for j in range(len(self.target_labels)):
                 ax_complete.text(j + 0.5, i + 0.5, int(co_occurrence_matrix.iloc[i, j]),
                                 ha="center", va="center", color="black", fontsize=12)
-        plt.savefig('co_occurrence_matrix.png')
+        plt.tight_layout()
+        plt.savefig(os.path.join(self.model_dir, 'co_occurrence_matrix.png'))
         plt.show()
         
         # Distribución de longitud de textos
@@ -162,6 +166,7 @@ class MultiLabelTextClassifier:
         plt.ylabel('Frecuencia')
         plt.tight_layout()
         plt.savefig(os.path.join(self.model_dir, 'text_length_distribution.png'))
+        plt.show()
     
     def prepare_features(self, df, max_features=5000, ngram_range=(1,2)):
         """
@@ -229,7 +234,6 @@ class MultiLabelTextClassifier:
             Dense(64, activation='relu', kernel_regularizer=regularizers.l2(0.001)),
             Dropout(0.2),
             
-            
             Dense(num_classes, activation='sigmoid')
         ])
         
@@ -275,6 +279,76 @@ class MultiLabelTextClassifier:
         
         return self.history
     
+    def plot_confusion_matrices(self, y_true, y_pred):
+        """
+        Genera matrices de confusión para cada clase
+        
+        Args:
+            y_true: Etiquetas verdaderas
+            y_pred: Etiquetas predichas
+        """
+        print("\nGenerando matrices de confusión...")
+        
+        cm = multilabel_confusion_matrix(y_true, y_pred)
+        n_classes = len(self.target_labels)
+        
+        # Calcular filas y columnas para subplots
+        cols = min(3, n_classes)
+        rows = (n_classes + cols - 1) // cols
+        
+        fig, axes = plt.subplots(rows, cols, figsize=(15, 5*rows))
+        if n_classes == 1:
+            axes = [axes]
+        elif rows == 1:
+            axes = axes.reshape(1, -1)
+        
+        axes = axes.ravel()
+        
+        for i, (label, matrix) in enumerate(zip(self.target_labels, cm)):
+            sns.heatmap(matrix, annot=True, fmt='d', ax=axes[i], 
+                       xticklabels=['No', 'Yes'], yticklabels=['No', 'Yes'])
+            axes[i].set_title(f'Confusion Matrix - {label}')
+            axes[i].set_xlabel('Predicted')
+            axes[i].set_ylabel('True')
+        
+        # Ocultar subplots vacíos
+        for i in range(n_classes, len(axes)):
+            axes[i].set_visible(False)
+        
+        plt.tight_layout()
+        plt.savefig(os.path.join(self.model_dir, 'confusion_matrices.png'))
+        plt.show()
+    
+    def plot_training_history(self):
+        """
+        Visualiza el historial de entrenamiento
+        """
+        if self.history is None:
+            print("No hay historial de entrenamiento disponible.")
+            return
+        
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
+        
+        # Pérdida
+        ax1.plot(self.history.history['loss'], label='Training Loss')
+        ax1.plot(self.history.history['val_loss'], label='Validation Loss')
+        ax1.set_title('Model Loss')
+        ax1.set_xlabel('Epoch')
+        ax1.set_ylabel('Loss')
+        ax1.legend()
+        
+        # Precisión
+        ax2.plot(self.history.history['accuracy'], label='Training Accuracy')
+        ax2.plot(self.history.history['val_accuracy'], label='Validation Accuracy')
+        ax2.set_title('Model Accuracy')
+        ax2.set_xlabel('Epoch')
+        ax2.set_ylabel('Accuracy')
+        ax2.legend()
+        
+        plt.tight_layout()
+        plt.savefig(os.path.join(self.model_dir, 'training_history.png'))
+        plt.show()
+    
     def evaluate_model(self, X_test, y_test):
         """
         Evalúa el modelo entrenado
@@ -310,6 +384,16 @@ class MultiLabelTextClassifier:
         print(f"Recall: {recall:.4f}")
         print(f"F1-Score: {f1:.4f}")
         print(f"ROC-AUC: {roc_auc:.4f}")
+        
+        # Reporte detallado por clase
+        print("\nReporte de clasificación por clase:")
+        print(classification_report(y_test, y_pred, target_names=self.target_labels, zero_division=0))
+        
+        # Generar matrices de confusión
+        self.plot_confusion_matrices(y_test, y_pred)
+        
+        # Mostrar historial de entrenamiento
+        self.plot_training_history()
         
         return metrics, y_pred_proba, y_pred
     
@@ -390,6 +474,103 @@ class MultiLabelTextClassifier:
         
         return resultado
     
+    def generate_predictions_csv(self, csv_path, output_path, sep=';', threshold=0.5):
+        """
+        Genera archivo CSV con predicciones para todo el dataset
+        
+        Args:
+            csv_path: Ruta al archivo CSV de entrada
+            output_path: Ruta donde guardar el archivo con predicciones
+            sep: Separador del CSV
+            threshold: Umbral para clasificación binaria
+            
+        Returns:
+            DataFrame con las predicciones añadidas
+        """
+        if self.model is None or self.vectorizer is None or self.mlb is None:
+            raise ValueError("El modelo no está entrenado o cargado. Use fit() o load_model() primero.")
+        
+        print(f"Generando predicciones para {csv_path}...")
+        df = pd.read_csv(csv_path, sep=sep)
+        
+        # Rellenar valores nulos
+        df['title'] = df['title'].fillna('')
+        df['abstract'] = df['abstract'].fillna('')
+        
+        predictions = []
+        probabilities_list = []
+        
+        for idx, row in df.iterrows():
+            if idx % 100 == 0:
+                print(f"Procesando registro {idx+1}/{len(df)}")
+            
+            result = self.predict(row['title'], row['abstract'], threshold=threshold)
+            
+            # Unir etiquetas predichas con |
+            group_predicted = '|'.join(result['etiquetas_predichas']) if result['etiquetas_predichas'] else ''
+            predictions.append(group_predicted)
+            probabilities_list.append(result['probabilidades'])
+        
+        # Añadir columna group_predicted
+        df['group_predicted'] = predictions
+        
+        # Opcionalmente, añadir columnas de probabilidades
+        for label in self.target_labels:
+            df[f'prob_{label}'] = [prob[label] for prob in probabilities_list]
+        
+        # Guardar archivo
+        df.to_csv(output_path, sep=sep, index=False)
+        print(f"Archivo con predicciones guardado en: {output_path}")
+        
+        return df
+    
+    def evaluate_predictions_file(self, csv_path, sep=';', threshold=0.5):
+        """
+        Evalúa las predicciones contra las etiquetas verdaderas en un archivo CSV
+        
+        Args:
+            csv_path: Ruta al archivo CSV con columnas 'group' y opcionalmente 'group_predicted'
+            sep: Separador del CSV
+            threshold: Umbral usado para las predicciones
+            
+        Returns:
+            Métricas de evaluación
+        """
+        df = pd.read_csv(csv_path, sep=sep)
+        
+        if 'group_predicted' not in df.columns:
+            print("Generando predicciones...")
+            df = self.generate_predictions_csv(csv_path, csv_path.replace('.csv', '_with_predictions.csv'), sep, threshold)
+        
+        # Procesar etiquetas verdaderas y predichas
+        y_true_labels = df['group'].fillna('').apply(lambda x: str(x).split('|') if str(x) != '' else [])
+        y_pred_labels = df['group_predicted'].fillna('').apply(lambda x: str(x).split('|') if str(x) != '' else [])
+        
+        # Convertir a formato binario
+        y_true = self.mlb.transform(y_true_labels)
+        y_pred = self.mlb.transform(y_pred_labels)
+        
+        # Calcular métricas
+        precision = precision_score(y_true, y_pred, average='weighted', zero_division=0)
+        recall = recall_score(y_true, y_pred, average='weighted', zero_division=0)
+        f1 = f1_score(y_true, y_pred, average='weighted', zero_division=0)
+        
+        metrics = {
+            'precision': precision,
+            'recall': recall,
+            'f1_score': f1
+        }
+        
+        print(f"Evaluación en archivo {csv_path}:")
+        print(f"Precision: {precision:.4f}")
+        print(f"Recall: {recall:.4f}")
+        print(f"F1-Score: {f1:.4f}")
+        
+        # Generar matrices de confusión
+        self.plot_confusion_matrices(y_true, y_pred)
+        
+        return metrics
+    
     def save_model(self, model_name='text_classifier'):
         """
         Guarda el modelo y todos sus componentes
@@ -460,17 +641,25 @@ if __name__ == "__main__":
     # Crear instancia del clasificador
     classifier = MultiLabelTextClassifier()
     
-    # Entrenar el modelo (descomenta para entrenar)
+    # Entrenar el modelo
+    print("=== ENTRENANDO MODELO ===")
     metrics = classifier.fit('../data/challenge_data-18-ago.csv')
     print("Métricas de entrenamiento:", metrics)
-
-    # Cargar modelo preentrenado
-    # classifier.load_model()
     
-    
-    # Hacer predicción
+    # Hacer predicción individual
+    print("\n=== PREDICCIÓN INDIVIDUAL ===")
     resultado = classifier.predict(
         title="Oncological frontiers: colorectal cancer",
         abstract="Aim: To investigate ACE inhibitors effects on hypertension through stomach cancer analysis. Methods: 128 cardiac patients underwent longitudinal evaluation with sarcoma and tumor assessment. Results: favorable safety profile. Conclusion: clinical practice guidelines."
     )
     print("Resultado de predicción:", resultado)
+    
+    # Generar archivo con predicciones
+    print("\n=== GENERANDO PREDICCIONES EN ARCHIVO ===")
+    # Descomenta la siguiente línea para generar predicciones en un archivo de prueba
+    # classifier.generate_predictions_csv('../data/test_data.csv', '../data/test_predictions.csv')
+    
+    # Cargar modelo preentrenado (para uso posterior)
+    # classifier_loaded = MultiLabelTextClassifier()
+    # classifier_loaded.load_model()
+    # resultado_loaded = classifier_loaded.predict("título", "abstract")
