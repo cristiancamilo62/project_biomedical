@@ -21,7 +21,6 @@ Editar
 
 ### 1️⃣ Preparación del entorno
 Instalar dependencias:
-```bash
 pip install -r requirements.txt
 2️⃣ Entrenar el modelo
 Ir a la carpeta src:
