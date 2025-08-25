@@ -49,7 +49,8 @@ Abrir navegador en: http://127.0.0.1:5000
 O en VS Code instalar Go Live e ir a la carpeta front/
 
 En la interfaz web:
-![image](https://github.com/user-attachments/assets/9fa599da-7857-4381-bc98-3358e94a5a84)
+<img width="1878" height="894" alt="image" src="https://github.com/user-attachments/assets/3a7522a3-7f9a-4cac-9bec-7c57116df2e4" />
+
 
 
 Título: Ingresa el título del texto a clasificar
