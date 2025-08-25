@@ -49,7 +49,7 @@ Abrir navegador en: http://127.0.0.1:5000
 O en VS Code instalar Go Live e ir a la carpeta front/
 
 En la interfaz web:
-<img width="1911" height="902" alt="image" src="https://github.com/user-attachments/assets/9fa599da-7857-4381-bc98-3358e94a5a84" />
+![image](https://github.com/user-attachments/assets/9fa599da-7857-4381-bc98-3358e94a5a84)
 
 
 Título: Ingresa el título del texto a clasificar
@@ -58,7 +58,8 @@ Abstract: Ingresa el resumen o contenido
 
 Clic en Clasificar
 
-<img width="1881" height="922" alt="image" src="https://github.com/user-attachments/assets/cb9665e4-bb25-4b58-b253-f1ae070ec44a" />
+![image](https://github.com/user-attachments/assets/cb9665e4-bb25-4b58-b253-f1ae070ec44a)
+
 
 
 📚 Dependencias Necesarias
