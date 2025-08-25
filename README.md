@@ -61,7 +61,7 @@ Clic en Clasificar
 ![image](https://github.com/user-attachments/assets/cb9665e4-bb25-4b58-b253-f1ae070ec44a)
 
 
-
+~~~bash
 📚 Dependencias Necesarias
 📋 requirements.txt
 
