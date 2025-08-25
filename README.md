@@ -8,25 +8,8 @@ Incluye una **API REST con Flask** y una **interfaz web** intuitiva.
 
 ## 🏗️ Estructura del Proyecto
 
-📦 Proyecto
-├── 📁 data/ # Datos del proyecto
-│ ├── challenge-data-18-ago.csv # Dataset principal
-│ └── prueba.xlsx # Datos de prueba
-├── 📁 src/ # Código fuente
-│ ├── 📁 pycache # Cache de Python
-├── 📁 front/ # Frontend
-│ ├── 🌐 index.html # Interfaz web
-│ └── 🎨 styles.css # Estilos CSS
-├── 📁 models/ # Modelos entrenados
-│ ├── 🏷️ text_classifier_labels.pkl # Etiquetas del modelo
-│ ├── 🧠 text_classifier_mlb.pkl # MultiLabelBinarizer
-│ ├── 🤖 text_classifier_model.h5 # Modelo TensorFlow/Keras
-│ ├── 📝 text_classifier_vectorizer.pkl # Vectorizador de texto
-├── 📊 data_visualization.ipynb # Análisis y visualización en Jupyter
-├── 🌶️ flask_app.py # API REST con Flask
-├── 🐍 MultiLabelTextClassifier.py # Script principal del clasificador
-├── 🚫 .gitignore # Archivos ignorados por Git
-└── 📋 requirements.txt # Dependencias del proyecto
+<img width="963" height="390" alt="image" src="https://github.com/user-attachments/assets/7ea1ecac-3c5a-4327-8755-8cc79e5e5d98" />
+
 
 yaml
 Copiar
@@ -66,12 +49,17 @@ Abrir navegador en: http://127.0.0.1:5000
 O en VS Code instalar Go Live e ir a la carpeta front/
 
 En la interfaz web:
+<img width="1911" height="902" alt="image" src="https://github.com/user-attachments/assets/9fa599da-7857-4381-bc98-3358e94a5a84" />
+
 
 Título: Ingresa el título del texto a clasificar
 
 Abstract: Ingresa el resumen o contenido
 
 Clic en Clasificar
+
+<img width="1881" height="922" alt="image" src="https://github.com/user-attachments/assets/cb9665e4-bb25-4b58-b253-f1ae070ec44a" />
+
 
 📚 Dependencias Necesarias
 📋 requirements.txt
