@@ -1,8 +1,10 @@
-flask
-flask-cors
-tensorflow
-scikit-learn
 pandas
+numpy
 matplotlib
 seaborn
 nltk
+scikit-learn
+tensorflow
+flask
+flask-cors
+joblib

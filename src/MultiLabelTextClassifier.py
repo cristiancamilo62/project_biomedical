@@ -138,6 +138,19 @@ class MultiLabelTextClassifier:
         plt.xticks(rotation=45)
         plt.tight_layout()
         plt.savefig(os.path.join(self.model_dir, 'class_distribution.png'))
+
+        co_occurrence_matrix = df[self.target_labels].T.dot(df[self.target_labels])
+        plt.figure(figsize=(8, 6))
+        ax_complete = sns.heatmap(co_occurrence_matrix, cmap='Blues', cbar=True,
+                                xticklabels=self.target_labels, yticklabels=self.target_labels)
+        plt.title('Matriz de Co-ocurrencia de Clases (con diagonal)')
+        # Añadir los números manualmente a cada celda
+        for i in range(len(self.target_labels)):
+            for j in range(len(self.target_labels)):
+                ax_complete.text(j + 0.5, i + 0.5, int(co_occurrence_matrix.iloc[i, j]),
+                                ha="center", va="center", color="black", fontsize=12)
+        plt.savefig('co_occurrence_matrix.png')
+        plt.show()
         
         # Distribución de longitud de textos
         df['text_combined'] = df['title'] + " " + df['abstract']
@@ -150,7 +163,7 @@ class MultiLabelTextClassifier:
         plt.tight_layout()
         plt.savefig(os.path.join(self.model_dir, 'text_length_distribution.png'))
     
-    def prepare_features(self, df, max_features=10000, ngram_range=(1,2)):
+    def prepare_features(self, df, max_features=5000, ngram_range=(1,2)):
         """
         Prepara las características para el entrenamiento
         
@@ -216,14 +229,12 @@ class MultiLabelTextClassifier:
             Dense(64, activation='relu', kernel_regularizer=regularizers.l2(0.001)),
             Dropout(0.2),
             
-            Dense(32, activation='relu', kernel_regularizer=regularizers.l2(0.001)),
-            Dropout(0.1),
             
             Dense(num_classes, activation='sigmoid')
         ])
         
         model.compile(
-            optimizer=Adam(learning_rate=0.001),
+            optimizer=Adam(learning_rate=0.0012),
             loss='binary_crossentropy',
             metrics=['accuracy']
         )
@@ -231,7 +242,7 @@ class MultiLabelTextClassifier:
         model.summary()
         return model
     
-    def train_model(self, X_train, y_train, epochs=17, batch_size=32, validation_split=0.1):
+    def train_model(self, X_train, y_train, epochs=25, batch_size=32, validation_split=0.1):
         """
         Entrena el modelo
         
@@ -459,7 +470,7 @@ if __name__ == "__main__":
     
     # Hacer predicción
     resultado = classifier.predict(
-        title="Machine Learning Applications in Healthcare",
-        abstract="This paper explores the use of machine learning algorithms in medical diagnosis and treatment planning."
+        title="Oncological frontiers: colorectal cancer",
+        abstract="Aim: To investigate ACE inhibitors effects on hypertension through stomach cancer analysis. Methods: 128 cardiac patients underwent longitudinal evaluation with sarcoma and tumor assessment. Results: favorable safety profile. Conclusion: clinical practice guidelines."
     )
     print("Resultado de predicción:", resultado)

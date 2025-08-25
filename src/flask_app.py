@@ -262,45 +262,6 @@ def model_info():
             'error': f'Error al obtener información del modelo: {str(e)}'
         })
 
-@app.route('/train', methods=['POST'])
-def train_model():
-    """
-    Endpoint para entrenar un nuevo modelo (opcional)
-    NOTA: Este proceso puede tardar mucho tiempo
-    """
-    try:
-        data = request.get_json()
-        csv_path = data.get('csv_path')
-        
-        if not csv_path:
-            return jsonify({
-                'success': False,
-                'error': 'Debe proporcionar la ruta del archivo CSV'
-            }), 400
-        
-        if not os.path.exists(csv_path):
-            return jsonify({
-                'success': False,
-                'error': 'El archivo CSV no existe'
-            }), 400
-        
-        global classifier
-        classifier = MultiLabelTextClassifier()
-        
-        # Entrenar modelo
-        metrics = classifier.fit(csv_path)
-        
-        return jsonify({
-            'success': True,
-            'message': 'Modelo entrenado exitosamente',
-            'metrics': metrics
-        })
-    
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': f'Error al entrenar el modelo: {str(e)}'
-        }), 500
 
 @app.errorhandler(404)
 def not_found(error):
