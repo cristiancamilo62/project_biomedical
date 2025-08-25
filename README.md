@@ -61,7 +61,6 @@ Clic en Clasificar
 ![image](https://github.com/user-attachments/assets/cb9665e4-bb25-4b58-b253-f1ae070ec44a)
 
 
-~~~bash
 📚 Dependencias Necesarias
 📋 requirements.txt
 
@@ -114,18 +113,18 @@ Editar
 Error: No module named ...
 👉 Ejecuta:
 
-bash
-Copiar
-Editar
+~~~bash
 pip install --upgrade pip
 pip install -r requirements.txt
-Puerto ocupado
+~~~
+
+Puerto ocupado  
 👉 Cambiar en flask_app.py:
 
-python
-Copiar
-Editar
+~~~python
 app.run(host="0.0.0.0", port=5001, debug=True)
+~~~
+
 📈 Próximas Mejoras
 Soporte para más formatos de datos
 
